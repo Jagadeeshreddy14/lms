@@ -1,0 +1,324 @@
+/* Enhanced CourseLearn Styles */
+
+/* Smooth transitions for all interactive elements */
+.course-learn-container * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 2px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+/* Video container animations */
+.video-container {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Fullscreen video enhancements */
+.fullscreen-video {
+  background: #000;
+}
+
+.fullscreen-video video {
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: contain;
+}
+
+/* Lecture completion animations */
+.lecture-complete-btn {
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.lecture-complete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(34, 197, 94, 0.3);
+}
+
+/* Progress circle animation */
+.progress-circle svg circle:nth-child(2) {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sidebar collapse animation */
+.sidebar-collapsed {
+  min-width: 60px;
+}
+
+/* Custom focus styles */
+.course-learn-container button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Video size transition */
+.video-size-transition {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Notes panel slide animation */
+.notes-panel {
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Lecture item hover effects */
+.lecture-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.lecture-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.lecture-item:hover::before {
+  left: 100%;
+}
+
+/* Chapter section styling */
+.chapter-section {
+  border-left: 2px solid transparent;
+  transition: border-color 0.3s ease;
+}
+
+.chapter-section.active {
+  border-left-color: #3b82f6;
+}
+
+/* Custom tooltip for buttons */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+}
+
+/* Video overlay fade effect */
+.video-overlay {
+  transition: opacity 0.3s ease;
+}
+
+.video-overlay:hover {
+  opacity: 0.9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .sidebar-expanded {
+    width: 280px;
+  }
+  
+  /* Reduce padding on tablets */
+  .course-learn-container .p-6 {
+    padding: 1rem;
+  }
+  
+  /* Smaller video size controls */
+  .video-size-controls button {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-expanded {
+    width: 100vw;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 50;
+  }
+  
+  .video-size-controls {
+    display: none;
+  }
+  
+  /* Mobile-specific adjustments */
+  .course-learn-container .p-4 {
+    padding: 0.75rem;
+  }
+  
+  .course-learn-container .p-6 {
+    padding: 1rem;
+  }
+  
+  /* Mobile video container */
+  .mobile-video-container {
+    padding: 0.5rem;
+  }
+  
+  /* Hide non-essential buttons on mobile */
+  .mobile-hide {
+    display: none !important;
+  }
+  
+  /* Adjust text sizes for mobile */
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+  
+  /* Better button spacing on mobile */
+  .mobile-btn-spacing {
+    padding: 0.375rem 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Extra small mobile screens */
+  .course-learn-container h1 {
+    font-size: 1rem;
+  }
+  
+  .course-learn-container h2 {
+    font-size: 0.875rem;
+  }
+  
+  .course-learn-container h3 {
+    font-size: 0.875rem;
+  }
+  
+  /* Very compact spacing for small screens */
+  .xs-compact {
+    padding: 0.25rem;
+  }
+  
+  /* Smaller icons on very small screens */
+  .xs-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Ultra small screens */
+  .sidebar-expanded {
+    padding: 0.5rem;
+  }
+  
+  /* Minimize button text on tiny screens */
+  .ultra-compact-text {
+    font-size: 0.75rem;
+  }
+  
+  /* Hide less important UI elements */
+  .ultra-hide {
+    display: none !important;
+  }
+}
+
+/* Landscape orientation optimizations for mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .video-container {
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+  
+  .top-bar {
+    padding: 0.5rem 1rem;
+  }
+  
+  .sidebar-expanded {
+    width: 50vw;
+  }
+}
+
+/* Loading states */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pulse animation for active elements */
+.pulse-blue {
+  animation: pulse-blue 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-blue {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .8;
+  }
+}
+
+/* Gradient backgrounds for better visual hierarchy */
+.gradient-bg-primary {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.gradient-bg-secondary {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+}
+
+/* Enhanced button styles */
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
