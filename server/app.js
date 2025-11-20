@@ -19,23 +19,24 @@ const PORT = process.env.PORT || 5000;
 
 dotenv.config();
 
-// CORS configuration
+// CORS configuration - FIXED: Added your frontend URLs
 const corsOptions = {
   origin: [
-    'http://localhost:5174',
-    'https://lms-indol-one.vercel.app',
-    'http://localhost:3000'
+    'http://localhost:5173', 
+    'https://advanced-lms.vercel.app',
+    'http://localhost:5174', // Added for Vite default port
+    'https://lms-indol-one.vercel.app' // Added your frontend URL
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type', 
     'Authorization', 
-    'X-Requested-With', 
-    'Cookie', 
-    'Set-Cookie',
+    'X-Requested-With',
     'Accept',
-    'Origin'
+    'Origin',
+    'Cookie',
+    'Set-Cookie'
   ],
   exposedHeaders: [
     'Set-Cookie',
@@ -46,18 +47,44 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests
+// Handle preflight requests globally
 app.options('*', cors(corsOptions));
 
 // Morgan logging
-app.use(morgan('combined'));
+app.use(morgan('dev'));
 
 // Cookie parser
 app.use(cookieParser());
 
-// Body parsing middleware
-app.use(express.json({ limit: '600mb' }));
-app.use(express.urlencoded({ limit: '600mb', extended: true }));
+// Body parsing middleware with conditional handling for file uploads
+app.use((req, res, next) => {
+  // Skip body parsing for multipart/form-data (file uploads)
+  if (req.headers['content-type']?.includes('multipart/form-data')) {
+    // Set longer timeout for file uploads
+    req.setTimeout(300000); // 5 minutes
+    res.setTimeout(300000); // 5 minutes
+    return next();
+  }
+  
+  // Apply JSON parsing for other requests
+  express.json({ limit: '600mb' })(req, res, (err) => {
+    if (err) {
+      console.error('JSON parsing error:', err);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid JSON payload'
+      });
+    }
+    next();
+  });
+});
+
+// URL-encoded parsing
+app.use(express.urlencoded({ 
+  limit: '600mb', 
+  extended: true,
+  parameterLimit: 1000000 // Increase parameter limit for large payloads
+}));
 
 // Database connections
 connectDB();
@@ -65,12 +92,11 @@ connectCloudinary();
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     success: true,
-    status: 'OK',
+    message: 'Server is running healthy',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    message: 'LMS Backend Server is running healthy'
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -83,7 +109,7 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     cors: {
       enabled: true,
-      allowed_origins: ['http://localhost:5174', 'https://lms-indol-one.vercel.app']
+      allowed_origins: corsOptions.origin
     }
   });
 });
@@ -97,6 +123,18 @@ app.use('/api/lecture', lectureRouter);
 app.use('/api/video', videoRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/exec', execRouter);
+
+// Manual CORS headers for all responses (additional safety)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (corsOptions.origin.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cookie, Set-Cookie');
+  next();
+});
 
 // 404 handler for API routes
 app.use('/api/*', (req, res) => {
@@ -161,6 +199,14 @@ app.use((err, req, res, next) => {
     });
   }
 
+  // File upload errors
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({
+      success: false,
+      message: 'File too large'
+    });
+  }
+
   // Default error
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
@@ -172,15 +218,30 @@ app.use((err, req, res, next) => {
   });
 });
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server Started on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 CORS enabled for: ${corsOptions.origin.join(', ')}`);
-  console.log(`🕒 Server timeout: ${server.timeout}ms`);
+  console.log(`⏰ Timeout settings: ${server.timeout}ms`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
 });
 
-// Increase timeout for large file uploads
-server.timeout = 600000;
+// Server timeout configuration for handling large file uploads
+server.timeout = 600000; // 10 minutes
+server.keepAliveTimeout = 650000; // Keep alive timeout should be higher than server timeout
+server.headersTimeout = 660000; // Headers timeout should be higher than keep alive timeout
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('🔥 Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
 
 export default app;
