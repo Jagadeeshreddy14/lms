@@ -28,8 +28,7 @@ app.use(morgan('dev'));
 app.use(cors({
   origin: [
     'https://lms-indol-one.vercel.app', 
-    'https://advanced-lms.vercel.app',
-     // <-- Add this line
+    
   ],
   credentials: true
 }));
