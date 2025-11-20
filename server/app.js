@@ -19,84 +19,87 @@ const PORT = process.env.PORT || 5000;
 
 dotenv.config();
 
-// Increase server timeout for file uploads
-app.timeout = 600000; // 10 minutes
-
-app.use(morgan('dev'));
-
-// CORS configuration
-app.use(cors({
-  origin: [
+// 1. CORS MIDDLEWARE - PUT THIS FIRST
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app',
     'https://lms-indol-one.vercel.app', 
-    'https://advanced-lms.vercel.app' 
-  ],
+    'https://advanced-lms.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
+// 2. CORS PACKAGE AS BACKUP
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow all origins for now to fix the issue
+    callback(null, true);
+  },
   credentials: true
 }));
 
+app.use(morgan('dev'));
 app.use(cookieParser());
 
-// Conditional middleware - skip body parsing for file upload routes
-app.use((req, res, next) => {
-  
-  if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
-      (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
-      (req.path.includes('/api/user/profile/upload-avatar') && req.method === 'POST') ||
-      (req.path.includes('/api/video/upload') && req.method === 'POST')) {
-    if (req.get('Content-Type')?.includes('multipart/form-data')) {
-      // Set longer timeout for file uploads
-      req.setTimeout(300000); // 5 minutes
-      res.setTimeout(300000); // 5 minutes
-      return next();
-    }
-  }
-  
-  express.json({ limit: '600mb' })(req, res, next);
-});
+// 3. BODY PARSING MIDDLEWARE
+app.use(express.json({ limit: '600mb' }));
+app.use(express.urlencoded({ limit: '600mb', extended: true }));
 
+// 4. MANUAL CORS FOR ALL RESPONSES
 app.use((req, res, next) => {
-  if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
-      (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
-      (req.path.includes('/api/user/profile/upload-avatar') && req.method === 'POST') ||
-      (req.path.includes('/api/video/upload') && req.method === 'POST')) {
-    if (req.get('Content-Type')?.includes('multipart/form-data')) {
-      // Set longer timeout for file uploads
-      req.setTimeout(300000); // 5 minutes
-      res.setTimeout(300000); // 5 minutes
-      return next();
-    }
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
   }
-  
-  express.urlencoded({ limit: '600mb', extended: true })(req, res, next);
+  next();
 });
 
 connectDB();
 connectCloudinary();
 
+// Routes
 app.get('/', (req, res) => {
-    res.send("Hare Krishna");
+  res.json({ message: "LMS Backend is running with CORS fixed" });
 });
 
-// all API Endpoints
-app.use('/api/video',videoRouter);
-
-app.use('/api/auth',authRouter);
-
+app.use('/api/video', videoRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
-
-app.use('/api/course',courseRouter);
-
+app.use('/api/course', courseRouter);
 app.use('/api/chapter', chapterRouter);
-
 app.use('/api/lecture', lectureRouter);
-
-app.use('/api/payment',paymentRouter);
+app.use('/api/payment', paymentRouter);
 app.use('/api/exec', execRouter);
 
-const server = app.listen(PORT,()=>{
-    console.log("Server Started on port", PORT);
+// Global CORS handler for all routes
+app.use('*', (req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  next();
 });
 
-// Set server timeout for handling large file uploads
-server.timeout = 600000; // 10 minutes
-server.keepAliveTimeout = 650000; // Keep alive timeout should be higher than server timeout
-server.headersTimeout = 660000; // Headers timeout should be higher than keep alive timeout
+const server = app.listen(PORT, () => {
+  console.log(`Server Started on port ${PORT} with CORS fixed`);
+});
+
+server.timeout = 600000;
