@@ -19,8 +19,6 @@ const PORT = process.env.PORT || 5000;
 
 dotenv.config();
 
-//// filepath: server.js (or your main backend file)
-const cors = require('cors');
 app.use(cors({
   origin: ['http://localhost:5174', 'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app']
 }));
