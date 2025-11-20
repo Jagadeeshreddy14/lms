@@ -148,7 +148,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       // Call logout API to clear server-side cookie
-      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout` || "http://localhost:3000/api/auth/logout", {
+      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout` || "https://lms-backend-git-master-jagadeeshreddy14s-projects.vercel.app/api/auth/logout", {
         method: 'POST',
         credentials: 'include',
         headers: {
