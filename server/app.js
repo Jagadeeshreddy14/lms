@@ -27,7 +27,7 @@ app.use(morgan('dev'));
 // CORS configuration
 app.use(cors({
   origin: [
-    'https://lms-indol-one.vercel.app/login', 
+    'https://lms-indol-one.vercel.app', 
     'https://advanced-lms.vercel.app' 
   ],
   credentials: true
