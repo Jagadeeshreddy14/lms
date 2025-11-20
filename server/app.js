@@ -25,82 +25,84 @@ app.timeout = 600000;
 // Logging
 app.use(morgan('dev'));
 
-// -------------------------
-// FIXED CORS CONFIGURATION
-// -------------------------
+// --------- CORS CONFIGURATION ---------
+const allowedOrigins = [
+  'https://lms-indol-one.vercel.app',
+  'https://advanced-lms.vercel.app'
+];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        'https://lms-indol-one.vercel.app',
-       ' https://lms-indol-one.vercel.app/'
-      ];
-
-      // Allow all Vercel Preview deployments
+      // Allow all Vercel preview deployments
       if (origin && origin.endsWith('.vercel.app')) {
         return callback(null, true);
       }
-
-      // Allow local development
+      // Allow explicit whitelisted domains and local development (no Origin)
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-
       return callback(new Error('Not allowed by CORS'));
     },
-    credentials: true
+    credentials: true,
+    optionsSuccessStatus: 200, // For legacy browsers
   })
 );
+
+// Handle preflight across all routes
+app.options('*', cors({
+  origin: (origin, callback) => {
+    if (origin && origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+}));
+
+// --------------------------------------
 
 // Cookie parser
 app.use(cookieParser());
 
-// Body parser with conditional skip for file uploads
-app.use((req, res, next) => {
-  const fileUploadRoutes = [
-    { path: '/api/lecture/', method: 'POST' },
-    { path: '/api/course/', method: 'PATCH' },
-    { path: '/api/user/profile/upload-avatar', method: 'POST' },
-    { path: '/api/video/upload', method: 'POST' }
-  ];
+// Body parser, skipping for file uploads
+const fileUploadRoutes = [
+  { path: '/api/lecture/', method: 'POST' },
+  { path: '/api/course/', method: 'PATCH' },
+  { path: '/api/user/profile/upload-avatar', method: 'POST' },
+  { path: '/api/video/upload', method: 'POST' }
+];
 
+app.use((req, res, next) => {
   const skip = fileUploadRoutes.some(
     route =>
       req.path.includes(route.path) &&
       req.method === route.method &&
       req.get('Content-Type')?.includes('multipart/form-data')
   );
-
   if (skip) {
     req.setTimeout(300000);
     res.setTimeout(300000);
     return next();
   }
-
   express.json({ limit: '600mb' })(req, res, next);
 });
-
 app.use((req, res, next) => {
-  const fileUploadRoutes = [
-    { path: '/api/lecture/', method: 'POST' },
-    { path: '/api/course/', method: 'PATCH' },
-    { path: '/api/user/profile/upload-avatar', method: 'POST' },
-    { path: '/api/video/upload', method: 'POST' }
-  ];
-
   const skip = fileUploadRoutes.some(
     route =>
       req.path.includes(route.path) &&
       req.method === route.method &&
       req.get('Content-Type')?.includes('multipart/form-data')
   );
-
   if (skip) {
     req.setTimeout(300000);
     res.setTimeout(300000);
     return next();
   }
-
   express.urlencoded({ limit: '600mb', extended: true })(req, res, next);
 });
 
@@ -123,12 +125,22 @@ app.use('/api/lecture', lectureRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/exec', execRouter);
 
+// --------- ERROR HANDLER (CORS HEADERS ENSURED) ----------
+app.use((err, req, res, next) => {
+  // CORS headers
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PATCH,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+});
+// ---------------------------------------------------------
+
 // Start server
 const server = app.listen(PORT, () => {
   console.log('Server started on port', PORT);
 });
 
-// Server timeouts
 server.timeout = 600000;
 server.keepAliveTimeout = 650000;
 server.headersTimeout = 660000;
