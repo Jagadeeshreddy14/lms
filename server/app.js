@@ -19,41 +19,10 @@ const PORT = process.env.PORT || 5000;
 
 dotenv.config();
 
-// 1. CORS MIDDLEWARE - PUT THIS FIRST
-app.use((req, res, next) => {
-  const allowedOrigins = [
-    'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app',
-    'https://lms-indol-one.vercel.app', 
-    'https://advanced-lms.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ];
-  
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  next();
-});
-
-// 2. CORS PACKAGE AS BACKUP
+//// filepath: server.js (or your main backend file)
+const cors = require('cors');
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow all origins for now to fix the issue
-    callback(null, true);
-  },
-  credentials: true
+  origin: ['http://localhost:5174', 'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app']
 }));
 
 app.use(morgan('dev'));
