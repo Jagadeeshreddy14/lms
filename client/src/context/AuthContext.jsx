@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }) => {
 
   const refreshToken = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/refresh-token` || "https://lms-backend-tau-nine.vercel.app/api/auth/refresh-token",  {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/refresh-token` || "https://lms-backend-tau-nine.vercel.app/auth/refresh-token",  {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -148,7 +148,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       // Call logout API to clear server-side cookie
-      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout` || "https://lms-backend-tau-nine.vercel.app/api/auth/logout", {
+      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout` || "https://lms-backend-tau-nine.vercel.app/auth/logout", {
         method: 'POST',
         credentials: 'include',
         headers: {
