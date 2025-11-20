@@ -27,9 +27,9 @@ app.use(morgan('dev'));
 // CORS configuration
 app.use(cors({
   origin: [
-    'http://localhost:5173', 
+    'https://lms-indol-one.vercel.app', 
     'https://advanced-lms.vercel.app',
-    'https://lms-indol-one.vercel.app' // <-- Add this line
+     // <-- Add this line
   ],
   credentials: true
 }));
