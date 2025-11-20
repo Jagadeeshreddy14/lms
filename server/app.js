@@ -23,6 +23,7 @@ const cors = require('cors');
 // Allow requests only from your frontend during development:
 app.use(cors({
   origin: 'http://localhost:5174',
+  "https://lms-indol-one.vercel.app"
   credentials: true, // if you use cookies/sessions
 }));
 
