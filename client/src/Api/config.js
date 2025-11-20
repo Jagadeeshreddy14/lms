@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || "https://lms-backend-tau-nine.vercel.app", // Backend base URL
+  baseURL: import.meta.env.VITE_BACKEND_URL || "https://lms-indol-one.vercel.app/api", // Backend base URL
   withCredentials: true, // useful for cookies/JWT
   timeout: 300000, // 5 minutes timeout for all requests
 });
@@ -41,7 +41,7 @@ api.interceptors.response.use(
       try {
         // Try to refresh the token
         const refreshResponse = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL || "https://lms-backend-tau-nine.vercel.app"}/auth/refresh-token`,
+          `${import.meta.env.VITE_BACKEND_URL || "https://lms-indol-one.vercel.app/api"}/auth/refresh-token`,
           {},
           {
             withCredentials: true,
@@ -84,7 +84,7 @@ const refreshTokenInBackground = async () => {
     if (!token) return;
 
     const response = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL || "https://lms-backend-tau-nine.vercel.app"}/auth/refresh-token`,
+      `${import.meta.env.VITE_BACKEND_URL || "https://lms-indol-one.vercel.app/api"}/auth/refresh-token`,
       {},
       {
         withCredentials: true,
