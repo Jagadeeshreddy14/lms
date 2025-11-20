@@ -26,7 +26,7 @@ app.use(morgan('dev'));
 
 const cors = require('cors');
 app.use(cors({
-  origin: 'https://lms-indol-one.vercel.app'
+  origin: 'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app'
 }));
 
 app.use(cookieParser());
