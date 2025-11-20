@@ -19,56 +19,7 @@ const PORT = process.env.PORT || 5000;
 
 dotenv.config();
 
-// Enhanced CORS configuration
-const corsOptions = {
-  origin: [
-    'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app', // Add this domain
-    'https://lms-indol-one.vercel.app', 
-    'https://advanced-lms.vercel.app',
-    'http://localhost:3000', // For local development
-    'http://localhost:5173'  // For Vite development
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-};
-
-// Apply CORS middleware
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
-
-app.use(morgan('dev'));
-app.use(cookieParser());
-
-// Apply JSON and URL-encoded middleware first
-app.use(express.json({ limit: '600mb' }));
-app.use(express.urlencoded({ limit: '600mb', extended: true }));
-
-// Timeout middleware for file uploads
-app.use((req, res, next) => {
-  if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
-      (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
-      (req.path.includes('/api/user/profile/upload-avatar') && req.method === 'POST') ||
-      (req.path.includes('/api/video/upload') && req.method === 'POST')) {
-    if (req.get('Content-Type')?.includes('multipart/form-data')) {
-      // Set longer timeout for file uploads
-      req.setTimeout(300000); // 5 minutes
-      res.setTimeout(300000); // 5 minutes
-    }
-  }
-  next();
-});
-
-connectDB();
-connectCloudinary();
-
-app.get('/', (req, res) => {
-    res.send("Jagdish - LMS Backend is running");
-});
-
-// Manual CORS headers as additional safety
+// 1. CORS MIDDLEWARE - PUT THIS FIRST
 app.use((req, res, next) => {
   const allowedOrigins = [
     'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app',
@@ -80,13 +31,55 @@ app.use((req, res, next) => {
   
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Origin', origin);
   }
-  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   next();
 });
 
-// API Endpoints
+// 2. CORS PACKAGE AS BACKUP
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow all origins for now to fix the issue
+    callback(null, true);
+  },
+  credentials: true
+}));
+
+app.use(morgan('dev'));
+app.use(cookieParser());
+
+// 3. BODY PARSING MIDDLEWARE
+app.use(express.json({ limit: '600mb' }));
+app.use(express.urlencoded({ limit: '600mb', extended: true }));
+
+// 4. MANUAL CORS FOR ALL RESPONSES
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  next();
+});
+
+connectDB();
+connectCloudinary();
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({ message: "LMS Backend is running with CORS fixed" });
+});
+
 app.use('/api/video', videoRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
@@ -96,31 +89,17 @@ app.use('/api/lecture', lectureRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/exec', execRouter);
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    success: false,
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'production' ? {} : err.message 
-  });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
+// Global CORS handler for all routes
+app.use('*', (req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  next();
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`Server Started on port ${PORT}`);
+  console.log(`Server Started on port ${PORT} with CORS fixed`);
 });
 
-// Set server timeout for handling large file uploads
-server.timeout = 600000; // 10 minutes
-server.keepAliveTimeout = 650000; // Keep alive timeout should be higher than server timeout
-server.headersTimeout = 660000; // Headers timeout should be higher than keep alive timeout
-
-export default app;
+server.timeout = 600000;
