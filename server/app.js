@@ -29,7 +29,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173', 
     'https://advanced-lms.vercel.app',
-    'https://lms-indol-one.vercel.app' 
+    'https://lms-indol-one.vercel.app',
+    'https://lms-kkv58cvqz-jagadeeshreddy14s-projects.vercel.app' // <-- Add this line
   ],
   credentials: true
 }));
