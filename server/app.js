@@ -69,7 +69,7 @@ connectDB();
 connectCloudinary();
 
 app.get('/', (req, res) => {
-    res.send("Hare Krishna");
+    res.send("Jagadish");
 });
 
 // all API Endpoints
