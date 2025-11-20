@@ -33,7 +33,7 @@ app.use(
     origin: (origin, callback) => {
       const allowedOrigins = [
         'https://lms-indol-one.vercel.app',
-        'https://advanced-lms.vercel.app'
+       ' https://lms-indol-one.vercel.app/'
       ];
 
       // Allow all Vercel Preview deployments
