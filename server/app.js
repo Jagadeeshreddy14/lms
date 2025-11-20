@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import cors from 'cors'; // Remove the require statement below
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/mongodb.js';
 import { connectCloudinary } from './config/cloudnary.js';
@@ -19,31 +19,34 @@ const PORT = process.env.PORT || 5000;
 
 dotenv.config();
 
-// Increase server timeout for file uploads
-app.timeout = 600000; // 10 minutes
-
-app.use(morgan('dev'));
-
-// Remove this line: const cors = require('cors');
-// Use the imported cors instead
-app.use(cors({
+// Enhanced CORS configuration
+const corsOptions = {
   origin: [
-    'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app',
-    'https://lms-frontend-omega.vercel.app', // if you have other domains
-    'http://localhost:3000' // for local development
+    'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app', // Add this domain
+    'https://lms-indol-one.vercel.app', 
+    'https://advanced-lms.vercel.app',
+    'http://localhost:3000', // For local development
+    'http://localhost:5173'  // For Vite development
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-}));
+};
 
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+app.use(morgan('dev'));
 app.use(cookieParser());
 
-// Apply JSON and URL-encoded middleware globally first
+// Apply JSON and URL-encoded middleware first
 app.use(express.json({ limit: '600mb' }));
 app.use(express.urlencoded({ limit: '600mb', extended: true }));
 
-// Then add timeout middleware for specific routes
+// Timeout middleware for file uploads
 app.use((req, res, next) => {
   if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
       (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
@@ -62,13 +65,28 @@ connectDB();
 connectCloudinary();
 
 app.get('/', (req, res) => {
-    res.send("Jagadish");
+    res.send("Jagdish - LMS Backend is running");
 });
 
-// Handle preflight OPTIONS requests
-app.options('*', cors());
+// Manual CORS headers as additional safety
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app',
+    'https://lms-indol-one.vercel.app', 
+    'https://advanced-lms.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 
-// all API Endpoints
+// API Endpoints
 app.use('/api/video', videoRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
@@ -78,7 +96,7 @@ app.use('/api/lecture', lectureRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/exec', execRouter);
 
-// Global error handling middleware
+// Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
@@ -97,7 +115,7 @@ app.use('*', (req, res) => {
 });
 
 const server = app.listen(PORT, () => {
-  console.log("Server Started on port", PORT);
+  console.log(`Server Started on port ${PORT}`);
 });
 
 // Set server timeout for handling large file uploads
