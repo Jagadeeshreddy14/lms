@@ -28,7 +28,7 @@ app.use(morgan('dev'));
 app.use(cors({
   origin: [
     'http://localhost:5173', 
-    'https://advanced-lms.vercel.app' 
+    '"https://lms-backend-tau-nine.vercel.app' 
   ],
   credentials: true
 }));
