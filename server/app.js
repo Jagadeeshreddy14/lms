@@ -14,89 +14,121 @@ import paymentRouter from './routes/payment.routes.js';
 import execRouter from './routes/exec.routes.js';
 import morgan from 'morgan';
 
+dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-dotenv.config();
-
 // Increase server timeout for file uploads
-app.timeout = 600000; // 10 minutes
+app.timeout = 600000;
 
+// Logging
 app.use(morgan('dev'));
 
-// CORS configuration
-app.use(cors({
-  origin: [
-    'https://lms-indol-one.vercel.app', 
-    'https://advanced-lms.vercel.app' 
-  ],
-  credentials: true
-}));
+// -------------------------
+// FIXED CORS CONFIGURATION
+// -------------------------
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'https://lms-indol-one.vercel.app',
+        'https://advanced-lms.vercel.app'
+      ];
 
+      // Allow all Vercel Preview deployments
+      if (origin && origin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+
+      // Allow local development
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true
+  })
+);
+
+// Cookie parser
 app.use(cookieParser());
 
-// Conditional middleware - skip body parsing for file upload routes
+// Body parser with conditional skip for file uploads
 app.use((req, res, next) => {
-  
-  if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
-      (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
-      (req.path.includes('/api/user/profile/upload-avatar') && req.method === 'POST') ||
-      (req.path.includes('/api/video/upload') && req.method === 'POST')) {
-    if (req.get('Content-Type')?.includes('multipart/form-data')) {
-      // Set longer timeout for file uploads
-      req.setTimeout(300000); // 5 minutes
-      res.setTimeout(300000); // 5 minutes
-      return next();
-    }
+  const fileUploadRoutes = [
+    { path: '/api/lecture/', method: 'POST' },
+    { path: '/api/course/', method: 'PATCH' },
+    { path: '/api/user/profile/upload-avatar', method: 'POST' },
+    { path: '/api/video/upload', method: 'POST' }
+  ];
+
+  const skip = fileUploadRoutes.some(
+    route =>
+      req.path.includes(route.path) &&
+      req.method === route.method &&
+      req.get('Content-Type')?.includes('multipart/form-data')
+  );
+
+  if (skip) {
+    req.setTimeout(300000);
+    res.setTimeout(300000);
+    return next();
   }
-  
+
   express.json({ limit: '600mb' })(req, res, next);
 });
 
 app.use((req, res, next) => {
-  if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
-      (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
-      (req.path.includes('/api/user/profile/upload-avatar') && req.method === 'POST') ||
-      (req.path.includes('/api/video/upload') && req.method === 'POST')) {
-    if (req.get('Content-Type')?.includes('multipart/form-data')) {
-      // Set longer timeout for file uploads
-      req.setTimeout(300000); // 5 minutes
-      res.setTimeout(300000); // 5 minutes
-      return next();
-    }
+  const fileUploadRoutes = [
+    { path: '/api/lecture/', method: 'POST' },
+    { path: '/api/course/', method: 'PATCH' },
+    { path: '/api/user/profile/upload-avatar', method: 'POST' },
+    { path: '/api/video/upload', method: 'POST' }
+  ];
+
+  const skip = fileUploadRoutes.some(
+    route =>
+      req.path.includes(route.path) &&
+      req.method === route.method &&
+      req.get('Content-Type')?.includes('multipart/form-data')
+  );
+
+  if (skip) {
+    req.setTimeout(300000);
+    res.setTimeout(300000);
+    return next();
   }
-  
+
   express.urlencoded({ limit: '600mb', extended: true })(req, res, next);
 });
 
+// DB + Cloudinary
 connectDB();
 connectCloudinary();
 
+// Root route
 app.get('/', (req, res) => {
-    res.send("Hare Krishna");
+  res.send('Hare Krishna');
 });
 
-// all API Endpoints
-app.use('/api/video',videoRouter);
-
-app.use('/api/auth',authRouter);
-
+// API Routes
+app.use('/api/video', videoRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
-
-app.use('/api/course',courseRouter);
-
+app.use('/api/course', courseRouter);
 app.use('/api/chapter', chapterRouter);
-
 app.use('/api/lecture', lectureRouter);
-
-app.use('/api/payment',paymentRouter);
+app.use('/api/payment', paymentRouter);
 app.use('/api/exec', execRouter);
 
-const server = app.listen(PORT,()=>{
-    console.log("Server Started on port", PORT);
+// Start server
+const server = app.listen(PORT, () => {
+  console.log('Server started on port', PORT);
 });
 
-// Set server timeout for handling large file uploads
-server.timeout = 600000; // 10 minutes
-server.keepAliveTimeout = 650000; // Keep alive timeout should be higher than server timeout
-server.headersTimeout = 660000; // Headers timeout should be higher than keep alive timeout
+// Server timeouts
+server.timeout = 600000;
+server.keepAliveTimeout = 650000;
+server.headersTimeout = 660000;
