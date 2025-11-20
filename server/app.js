@@ -24,14 +24,9 @@ app.timeout = 600000; // 10 minutes
 
 app.use(morgan('dev'));
 
-// CORS configuration
 const cors = require('cors');
 app.use(cors({
-  origin: [
-    'https://lms-indol-one.vercel.app', 
-    'https://advanced-lms.vercel.app' 
-  ],
-  credentials: true
+  origin: 'https://lms-indol-one.vercel.app'
 }));
 
 app.use(cookieParser());
