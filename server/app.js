@@ -19,8 +19,11 @@ const PORT = process.env.PORT || 5000;
 
 dotenv.config();
 
+const cors = require('cors');
+// Allow requests only from your frontend during development:
 app.use(cors({
-  origin: ['http://localhost:5174', 'https://lms-642sk3so5-jagadeeshreddy14s-projects.vercel.app']
+  origin: 'http://localhost:5174',
+  credentials: true, // if you use cookies/sessions
 }));
 
 app.use(morgan('dev'));
