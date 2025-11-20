@@ -29,7 +29,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173', 
     'https://advanced-lms.vercel.app',
-    'https://lms-indol-one.vercel.app' // <-- Add this line
+    'https://lms-indol-one.vercel.app' 
   ],
   credentials: true
 }));
