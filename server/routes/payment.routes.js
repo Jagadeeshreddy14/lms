@@ -6,7 +6,7 @@ import { userPurchaseCourse } from '../controllers/user.controllers.js';
 
 const paymentRouter = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const FRONTEND_URL = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://lms-indol-one.vercel.app/login';
+const FRONTEND_URL = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://lms-indol-one.vercel.app/';
 
 
 // Create Stripe Checkout Session
