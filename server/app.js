@@ -1,4 +1,49 @@
-import express from 'express';
+// CORS configuration (robust origin matching and explicit headers)
+const baseAllowedOrigins = [
+  process.env.FRONTEND_URL?.replace(/\/$/, ''),
+  process.env.CLIENT_URL?.replace(/\/$/, ''),
+  'https://lms-indol-one.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+].filter(Boolean);
+
+const allowedOriginSet = new Set(baseAllowedOrigins);
+const isAllowedOrigin = (origin) => {
+  const normalized = origin?.replace(/\/$/, '');
+  return !origin || allowedOriginSet.has(normalized);
+};
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      // Reflect the request origin so credentials work
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Explicit CORS headers on all responses and fast-path OPTIONS
+app.use((req, res, next) => {
+  const origin = req.headers.origin?.replace(/\/$/, '');
+  if (isAllowedOrigin(origin)) {
+    if (origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Vary', 'Origin');
+    }
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
