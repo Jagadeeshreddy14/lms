@@ -13,128 +13,72 @@ import videoRouter from './routes/video.routes.js';
 import paymentRouter from './routes/payment.routes.js';
 import execRouter from './routes/exec.routes.js';
 import morgan from 'morgan';
+import path from "path";
+import { fileURLToPath } from "url";
 
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-dotenv.config();
+// ---------- Allow current file path ---------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Increase server timeout for file uploads
-app.timeout = 600000; // 10 minutes
-
-app.use(morgan('dev'));
-
-// CORS configuration (robust origin matching and explicit headers)
-const baseAllowedOrigins = [
-  process.env.FRONTEND_URL?.replace(/\/$/, ''),
-  process.env.CLIENT_URL?.replace(/\/$/, ''),
-  'https://lms-indol-one.vercel.app',
-  'http://localhost:5173',
-  'http://localhost:3000'
-].filter(Boolean);
-
-const allowedOriginSet = new Set(baseAllowedOrigins);
-const isAllowedOrigin = (origin) => {
-  const normalized = origin?.replace(/\/$/, '');
-  return !origin || allowedOriginSet.has(normalized);
-};
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (isAllowedOrigin(origin)) {
-      // Reflect the request origin so credentials work
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Explicit CORS headers on all responses and fast-path OPTIONS
-app.use((req, res, next) => {
-  const origin = req.headers.origin?.replace(/\/$/, '');
-  if (isAllowedOrigin(origin)) {
-    if (origin) {
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Vary', 'Origin');
-    }
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  }
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-  next();
-});
-
-app.use(cookieParser());
-
-// Conditional middleware - skip body parsing for file upload routes
-app.use((req, res, next) => {
-  
-  if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
-      (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
-      (req.path.includes('/api/user/profile/upload-avatar') && req.method === 'POST') ||
-      (req.path.includes('/api/video/upload') && req.method === 'POST')) {
-    if (req.get('Content-Type')?.includes('multipart/form-data')) {
-      // Set longer timeout for file uploads
-      req.setTimeout(300000); // 5 minutes
-      res.setTimeout(300000); // 5 minutes
-      return next();
-    }
-  }
-  
-  express.json({ limit: '600mb' })(req, res, next);
-});
-
-app.use((req, res, next) => {
-  if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
-      (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
-      (req.path.includes('/api/user/profile/upload-avatar') && req.method === 'POST') ||
-      (req.path.includes('/api/video/upload') && req.method === 'POST')) {
-    if (req.get('Content-Type')?.includes('multipart/form-data')) {
-      // Set longer timeout for file uploads
-      req.setTimeout(300000); // 5 minutes
-      res.setTimeout(300000); // 5 minutes
-      return next();
-    }
-  }
-  
-  express.urlencoded({ limit: '600mb', extended: true })(req, res, next);
-});
-
+// DB + Cloud
 connectDB();
 connectCloudinary();
 
-app.get('/', (req, res) => {
-    res.send("Hare Krishna");
+// Logs
+app.use(morgan('dev'));
+
+// ----------- Correct CORS -------------
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "https://lms-indol-one.vercel.app",
+  credentials: true
+}));
+
+app.use(cookieParser());
+
+// ----------- Body Parsers -------------
+app.use(express.json({ limit: "500mb" }));
+app.use(express.urlencoded({ limit: "500mb", extended: true }));
+
+// ---------- Test Route ----------
+app.get('/api/test', (req, res) => {
+  res.json({ success: true, message: "Backend Connected 🔥" });
 });
 
-// all API Endpoints
-app.use('/api/video',videoRouter);
+// ---------- Home Route ----------
+app.get("/", (req, res) => {
+  res.send("Jagadish 🎉 Backend Running");
+});
 
-app.use('/api/auth',authRouter);
-
+// ---------- API Routes ----------
+app.use('/api/video', videoRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
-
-app.use('/api/course',courseRouter);
-
+app.use('/api/course', courseRouter);
 app.use('/api/chapter', chapterRouter);
-
 app.use('/api/lecture', lectureRouter);
-
-app.use('/api/payment',paymentRouter);
+app.use('/api/payment', paymentRouter);
 app.use('/api/exec', execRouter);
 
-const server = app.listen(PORT,()=>{
-    console.log("Server Started on port", PORT);
+// ---------- Serve Frontend Build (After Deployment) ----------
+if (process.env.NODE_ENV === "production") {
+  const frontendPath = path.join(__dirname, "frontend/dist");
+  app.use(express.static(frontendPath));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendPath, "index.html"));
+  });
+}
+
+// ---------- Start Server ----------
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server Started on PORT ${PORT}`);
 });
 
-// Set server timeout for handling large file uploads
-server.timeout = 600000; // 10 minutes
-server.keepAliveTimeout = 650000; // Keep alive timeout should be higher than server timeout
-server.headersTimeout = 660000; // Headers timeout should be higher than keep alive timeout
+// Larger Upload Timeout
+server.timeout = 600000;
+server.keepAliveTimeout = 650000;
+server.headersTimeout = 660000;
